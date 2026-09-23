@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -170,7 +171,7 @@ class SkillInstallerTests(unittest.TestCase):
         self.assertIn("--agent claude-code --agent codex", result.stdout)
 
     def test_repository_manifest_previews_all_external_skills(self) -> None:
-        """Catch an incomplete checked-in manifest or grouping regression."""
+        """Catch a preview that omits or duplicates a declared skill."""
         env = os.environ.copy()
         env["HOME"] = str(self.home)
 
@@ -187,26 +188,35 @@ class SkillInstallerTests(unittest.TestCase):
         command_lines = [
             line for line in result.stdout.splitlines() if line.startswith("npx ")
         ]
-        self.assertEqual(len(command_lines), 20)
-        self.assertEqual(sum(line.count("--skill ") for line in command_lines), 63)
-        self.assertTrue(
-            any(
-                "npx skills add https://cli.sentry.dev --skill sentry-cli --global"
-                in line
-                for line in command_lines
-            )
-        )
-        self.assertTrue(
-            any(
-                "https://github.com/apemost/skills.git"
-                " --skill task-manager --skill use-subagents" in line
-                for line in command_lines
-            )
-        )
-
         self.assertTrue(REPOSITORY_MANIFEST.is_file())
         manifest = yaml.safe_load(REPOSITORY_MANIFEST.read_text(encoding="utf-8"))
-        self.assertEqual(len(manifest["skills"]), 63)
+        planned_skills = []
+        for line in command_lines:
+            command = shlex.split(line)
+            self.assertEqual(command[:3], ["npx", "skills", "add"])
+            source_url = command[3]
+            planned_skills.extend(
+                (source_url, command[index + 1])
+                for index, argument in enumerate(command[:-1])
+                if argument == "--skill"
+            )
+        self.assertCountEqual(
+            planned_skills,
+            [(skill["source_url"], skill["name"]) for skill in manifest["skills"]],
+        )
+        self.assertIn(("https://cli.sentry.dev", "sentry-cli"), planned_skills)
+        self.assertIn(
+            ("https://github.com/apemost/skills.git", "task-manager"),
+            planned_skills,
+        )
+        self.assertIn(
+            ("https://github.com/apemost/skills.git", "use-subagents"),
+            planned_skills,
+        )
+        self.assertNotIn(
+            "dispatching-parallel-agents",
+            {skill["name"] for skill in manifest["skills"]},
+        )
         self.assertFalse(
             any(
                 key.startswith("observed_")

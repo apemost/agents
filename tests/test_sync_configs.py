@@ -44,15 +44,20 @@ class SyncConfigsTests(unittest.TestCase):
 
     def run_sync(
         self,
-        *,
+        *arguments: str,
         script: Path = SYNC_SCRIPT,
         cwd: Path = REPO_ROOT,
+        extra_env: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess[str]:
         """Run the sync script against the isolated home directory."""
         env = os.environ.copy()
+        env.pop("NO_COLOR", None)
+        env.pop("CLICOLOR_FORCE", None)
         env["HOME"] = str(self.home)
+        if extra_env:
+            env.update(extra_env)
         return subprocess.run(
-            [sys.executable, str(script)],
+            [sys.executable, str(script), *arguments],
             cwd=cwd,
             env=env,
             text=True,
@@ -270,6 +275,53 @@ prefix_rule(pattern=["custom"], decision="allow")
         self.assertEqual(kimi["custom_value"], "keep")
         self.assertNotIn(custom_rule, kimi["permission"]["rules"])
         self.assertEqual(kimi["permission"]["rules"], kimi_patch["permission"]["rules"])
+
+    def test_preview_shows_removed_user_rule_without_writing_configs(self) -> None:
+        """Catch a preview that hides a replaced rule or changes user files."""
+        path = self.write_home_file(
+            ".claude/settings.json",
+            '{"permissions":{"allow":["Bash(custom:*)"]}}\n',
+        )
+        original = path.read_bytes()
+
+        result = self.run_sync("--preview")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("--- ", result.stdout)
+        self.assertIn("+++ ", result.stdout)
+        self.assertIn("Bash(custom:*)", result.stdout)
+        self.assertNotIn("\x1b[", result.stdout)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertFalse(any(p.exists() for p in self.managed_paths()[1:]))
+
+    def test_preview_colors_diff_when_forced(self) -> None:
+        """Catch an uncolored diff in an interactive installation."""
+        self.write_home_file(
+            ".claude/settings.json",
+            '{"permissions":{"allow":["Bash(custom:*)"]}}\n',
+        )
+
+        result = self.run_sync(
+            "--preview",
+            extra_env={"CLICOLOR_FORCE": "1", "TERM": "xterm"},
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m--- ")
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m\+\+\+ ")
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m@@ ")
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m-.*Bash\(custom:\*\)")
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m\+\s+\"autoMemoryEnabled\"")
+
+    def test_no_color_disables_forced_diff_color(self) -> None:
+        """Catch ANSI escapes in a user-requested plain-text preview."""
+        result = self.run_sync(
+            "--preview",
+            extra_env={"CLICOLOR_FORCE": "1", "NO_COLOR": "", "TERM": "xterm"},
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("\x1b[", result.stdout)
 
     def test_second_sync_is_byte_for_byte_idempotent(self) -> None:
         self.seed_custom_configs()
@@ -727,6 +779,8 @@ class InstallScriptTests(unittest.TestCase):
     ) -> subprocess.CompletedProcess[str]:
         """Run install.sh with isolated user state and scripted input."""
         env = os.environ.copy()
+        env.pop("NO_COLOR", None)
+        env.pop("CLICOLOR_FORCE", None)
         env["HOME"] = str(self.home)
         env["PATH"] = f"{self.fake_bin}:{path or os.environ['PATH']}"
         env["NPX_LOG"] = str(self.npx_log)
@@ -763,6 +817,67 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(claude_hook.readlink(), TASK_MANAGER_HOOK)
         self.assertTrue(codex_hook.is_symlink())
         self.assertEqual(codex_hook.readlink(), TASK_MANAGER_HOOK)
+
+    def test_existing_instruction_file_is_preserved_when_overwrite_declined(self) -> None:
+        """Catch silent replacement when the default answer is no."""
+        target = self.home / ".claude/CLAUDE.md"
+        target.parent.mkdir(parents=True)
+        target.write_text("user-owned\n", encoding="utf-8")
+
+        result = self.run_install("\nn\nn\n")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(target.is_symlink())
+        self.assertEqual(target.read_text(encoding="utf-8"), "user-owned\n")
+        self.assertTrue((self.home / ".codex/AGENTS.md").is_symlink())
+
+    def test_relative_link_to_repository_is_unchanged_without_prompt(self) -> None:
+        """Catch prompting for a link that already resolves to this repository."""
+        target = self.home / ".claude/CLAUDE.md"
+        target.parent.mkdir(parents=True)
+        relative_source = os.path.relpath(
+            REPO_ROOT / "AGENTS.md", target.parent.resolve()
+        )
+        target.symlink_to(relative_source)
+        self.assertEqual(target.resolve(), REPO_ROOT / "AGENTS.md")
+
+        result = self.run_install("n\nn\n")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(os.readlink(target), relative_source)
+        self.assertNotIn("Overwrite existing", result.stdout)
+        self.assertIn("unchanged link", result.stdout)
+
+    def test_accepted_instruction_replacement_keeps_recoverable_original(self) -> None:
+        """Catch accepted replacement that destroys an existing file."""
+        target = self.home / ".claude/CLAUDE.md"
+        target.parent.mkdir(parents=True)
+        target.write_text("user-owned\n", encoding="utf-8")
+
+        result = self.run_install("y\nn\nn\n")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(target.is_symlink())
+        self.assertEqual(target.readlink(), REPO_ROOT / "AGENTS.md")
+        backups = list(target.parent.glob("CLAUDE.md.backup.*/original"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(encoding="utf-8"), "user-owned\n")
+        self.assertIn(str(backups[0]), result.stdout)
+
+    def test_accepted_directory_replacement_keeps_directory_contents(self) -> None:
+        """Catch ln placing a link inside an existing target directory."""
+        target = self.home / ".claude/CLAUDE.md"
+        target.mkdir(parents=True)
+        (target / "note.txt").write_text("keep\n", encoding="utf-8")
+
+        result = self.run_install("y\nn\nn\n")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(target.is_symlink())
+        self.assertEqual(target.readlink(), REPO_ROOT / "AGENTS.md")
+        backups = list(target.parent.glob("CLAUDE.md.backup.*/original/note.txt"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_text(encoding="utf-8"), "keep\n")
 
     def test_prepares_normal_skill_directories_for_installer(self) -> None:
         """Create only the directories used by the CLI installer."""
@@ -810,6 +925,7 @@ class InstallScriptTests(unittest.TestCase):
         self.assertIn("skill directory is a symlink", result.stderr)
         self.assertTrue(target.is_symlink())
         self.assertEqual(target.readlink(), source)
+        self.assertFalse((self.home / ".claude/CLAUDE.md").exists())
 
     def test_install_runs_manifest_skill_add_after_preparing_directories(self) -> None:
         """Catch omission of the manifest installer from the top-level script."""
@@ -887,11 +1003,54 @@ class InstallScriptTests(unittest.TestCase):
         self.assertFalse((existing_skill / "task-manager").exists())
 
     def test_yes_runs_config_sync_from_outside_the_repository(self) -> None:
-        result = self.run_install("y\n")
+        result = self.run_install("y\ny\n")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.home / ".claude/settings.json").is_file())
         self.assertIn("Syncing agent configs", result.stdout)
+
+    def test_config_changes_are_previewed_before_decline(self) -> None:
+        """Catch a prompt that asks for consent without showing the diff."""
+        target = self.home / ".claude/settings.json"
+        target.parent.mkdir(parents=True)
+        target.write_text('{"permissions":{"allow":["Bash(custom:*)"]}}\n')
+        original = target.read_bytes()
+
+        result = self.run_install("y\nn\nn\n")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Bash(custom:*)", result.stdout)
+        self.assertIn("--- ", result.stdout)
+        self.assertIn("+++ ", result.stdout)
+        self.assertEqual(target.read_bytes(), original)
+
+    def test_install_colors_status_and_diff_when_forced(self) -> None:
+        """Catch a colored diff that is lost when invoked through install.sh."""
+        target = self.home / ".claude/settings.json"
+        target.parent.mkdir(parents=True)
+        target.write_text('{"permissions":{"allow":["Bash(custom:*)"]}}\n')
+        original = target.read_bytes()
+
+        result = self.run_install(
+            "y\nn\nn\n",
+            extra_env={"CLICOLOR_FORCE": "1", "TERM": "xterm"},
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*mPreparing skill directories")
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m--- ")
+        self.assertRegex(result.stdout, r"\x1b\[[0-9;]*m-.*Bash\(custom:\*\)")
+        self.assertEqual(target.read_bytes(), original)
+
+    def test_install_respects_no_color_when_forced(self) -> None:
+        """Catch ANSI escapes when NO_COLOR is present."""
+        result = self.run_install(
+            "n\nn\n",
+            extra_env={"CLICOLOR_FORCE": "1", "NO_COLOR": "", "TERM": "xterm"},
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("\x1b[", result.stdout)
 
     def test_no_skips_config_sync(self) -> None:
         result = self.run_install("n\n")
@@ -916,7 +1075,7 @@ class InstallScriptTests(unittest.TestCase):
         self.assertIn("Skipped agent config sync", result.stdout)
 
     def test_yes_uses_project_python_when_system_python_is_too_old(self) -> None:
-        result = self.run_install("yes\n", path="/usr/bin:/bin")
+        result = self.run_install("yes\nyes\n", path="/usr/bin:/bin")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.home / ".claude/settings.json").is_file())
@@ -960,7 +1119,7 @@ class InstallScriptTests(unittest.TestCase):
         fake_uv.chmod(0o755)
 
         result = self.run_install(
-            "yes\nyes\n",
+            "yes\nyes\nyes\n",
             path="/usr/bin:/bin",
             script=fixture_install,
         )
@@ -970,6 +1129,12 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(
             (self.home / "uv-args").read_text(encoding="utf-8").splitlines(),
             [
+                "run",
+                "--locked",
+                "--project",
+                str(fixture_repo),
+                str(fixture_repo / "scripts/sync-configs.py"),
+                "--preview",
                 "run",
                 "--locked",
                 "--project",
@@ -986,7 +1151,7 @@ class InstallScriptTests(unittest.TestCase):
         )
 
     def test_repeated_install_does_not_recreate_links_or_configs(self) -> None:
-        first = self.run_install("yes\n")
+        first = self.run_install("yes\nyes\n")
         self.assertEqual(first.returncode, 0, first.stderr)
         links = self.installed_symlink_paths()
         configs = [
@@ -1003,7 +1168,7 @@ class InstallScriptTests(unittest.TestCase):
             path: (path.stat().st_ino, path.stat().st_mtime_ns) for path in configs
         }
 
-        second = self.run_install("yes\n")
+        second = self.run_install("yes\nyes\n")
 
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertEqual(

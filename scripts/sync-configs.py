@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import argparse
 from collections.abc import MutableMapping
 from copy import deepcopy
 from dataclasses import dataclass
+import difflib
 import json
 import os
 from pathlib import Path
@@ -13,7 +15,7 @@ import shutil
 import stat
 import sys
 import tempfile
-from typing import Any
+from typing import Any, TextIO
 
 import tomlkit
 from tomlkit.exceptions import ParseError
@@ -35,6 +37,7 @@ class WriteOperation:
     display_path: Path
     write_path: Path
     content: str
+    original_content: str | None
     existed: bool
     changed: bool
 
@@ -69,6 +72,18 @@ CONFIG_SPECS = (
 
 class ConfigSyncError(RuntimeError):
     """Report an actionable validation or filesystem error to the CLI."""
+
+
+def _color_enabled(stream: TextIO) -> bool:
+    if "NO_COLOR" in os.environ:
+        return False
+    if os.environ.get("CLICOLOR_FORCE") == "1":
+        return True
+    return stream.isatty() and os.environ.get("TERM", "dumb") != "dumb"
+
+
+def _colored(text: str, color: str, enabled: bool) -> str:
+    return f"\x1b[{color}m{text}\x1b[0m" if enabled else text
 
 
 def _merge_values(target: Any, patch: Any) -> Any:
@@ -240,6 +255,7 @@ def _prepare_operations(repo_root: Path, home: Path) -> list[WriteOperation]:
                 display_path,
                 write_path,
                 content,
+                target_text,
                 existed,
                 target_text != content,
             )
@@ -452,24 +468,77 @@ def _apply_operations(operations: list[WriteOperation]) -> None:
         )
 
 
-def main() -> int:
-    """Validate every patch, then atomically update changed user configs."""
+def _preview_operations(operations: list[WriteOperation]) -> None:
+    use_color = _color_enabled(sys.stdout)
+    changed = [operation for operation in operations if operation.changed]
+    if not changed:
+        print(_colored("No config changes needed.", "2", use_color))
+        return
+
+    for operation in changed:
+        action = "update" if operation.existed else "create"
+        print(_colored(f"  {action}: {operation.display_path}", "1;36", use_color))
+        original_lines = (operation.original_content or "").splitlines(keepends=True)
+        proposed_lines = operation.content.splitlines(keepends=True)
+        difference = difflib.unified_diff(
+            original_lines,
+            proposed_lines,
+            fromfile=str(operation.display_path) if operation.existed else "/dev/null",
+            tofile=str(operation.display_path),
+            n=0,
+        )
+        for line in difference:
+            if line.startswith(("--- ", "+++ ")):
+                color = "1;36"
+            elif line.startswith("@@ "):
+                color = "34"
+            elif line.startswith("-"):
+                color = "31"
+            elif line.startswith("+"):
+                color = "32"
+            else:
+                color = ""
+            content = line[:-1] if line.endswith("\n") else line
+            print(_colored(content, color, use_color) if color else content)
+            if not line.endswith("\n"):
+                print("\\ No newline at end of file")
+
+
+def main(arguments: list[str] | None = None) -> int:
+    """Preview or atomically update validated user config patches."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--preview",
+        action="store_true",
+        help="show the proposed config changes without writing files",
+    )
+    args = parser.parse_args(arguments if arguments is not None else [])
     repo_root = Path(__file__).resolve().parents[1]
     home = Path.home()
     try:
         operations = _prepare_operations(repo_root, home)
+        if args.preview:
+            _preview_operations(operations)
+            return 0
         _apply_operations(operations)
+        use_color = _color_enabled(sys.stdout)
         for operation in operations:
             if operation.changed:
                 action = "updated" if operation.existed else "created"
             else:
                 action = "unchanged"
-            print(f"  {action}: {operation.display_path}")
+            color = "32" if operation.changed else "2"
+            print(_colored(f"  {action}: {operation.display_path}", color, use_color))
     except ConfigSyncError as error:
-        print(f"sync-configs: error: {error}", file=sys.stderr)
+        print(
+            _colored(
+                f"sync-configs: error: {error}", "31", _color_enabled(sys.stderr)
+            ),
+            file=sys.stderr,
+        )
         return 1
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

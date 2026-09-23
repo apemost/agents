@@ -57,9 +57,6 @@ skills:
 - name: design-taste-frontend
   source_type: github
   source_url: https://github.com/leonxlnx/taste-skill.git
-- name: dispatching-parallel-agents
-  source_type: github
-  source_url: https://github.com/obra/superpowers.git
 - name: docx
   source_type: github
   source_url: https://github.com/anthropics/skills.git
