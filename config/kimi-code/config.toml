@@ -1,0 +1,426 @@
+default_permission_mode = "yolo"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(docker image inspect*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(docker image ls*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(docker volume inspect*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(docker volume ls*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm dep list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm dependencies list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm dependency list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm env*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm get*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm history*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm lint*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm ls*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm plugin list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm repo list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm search*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm show*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm status*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm template*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm verify*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(helm version*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl api-resources*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl api-versions*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl cluster-info*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl describe*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl explain*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl get*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl logs*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl top*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(kubectl version*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(docker image push*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(docker push*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(docker pussh*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(docker volume rm*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(git push*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm create*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm del*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm delete*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm dep build*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm dep update*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm dependencies build*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm dependencies update*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm dependency build*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm dependency update*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm fetch*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm install*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm package*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm plugin install*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm plugin uninstall*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm plugin update*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm pull*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm push*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm registry*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm repo add*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm repo index*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm repo remove*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm repo update*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm rollback*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm test*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm uninstall*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(helm upgrade*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl apply*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl attach*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl auth*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl autoscale*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl cordon*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl cp*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl create*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl delete*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl drain*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl edit*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl exec*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl expose*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl label*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl patch*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl port-forward*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl proxy*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl replace*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl rollout*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl run*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl scale*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl set*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl taint*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(kubectl uncordon*)"
+
+[[permission.rules]]
+decision = "deny"
+scope = "user"
+pattern = "Bash(ssh*)"

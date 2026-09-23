@@ -1,0 +1,24 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+approvals_reviewer = "auto_review"
+check_for_update_on_startup = false
+model_auto_compact_token_limit = 900000
+model_context_window = 1000000
+sandbox_mode = "workspace-write"
+
+[features]
+prevent_idle_sleep = true
+
+[notice]
+hide_rate_limit_model_nudge = true
+
+[tui]
+show_tooltips = false
+
+[[hooks.SessionStart]]
+matcher = "^compact$"
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "python3 ~/.codex/hooks/session-start-task-manager.py"
+statusMessage = "Restoring task guidance"
