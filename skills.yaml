@@ -171,6 +171,9 @@ skills:
 - name: sentry-cli
   source_type: well-known
   source_url: https://cli.sentry.dev
+- name: show-me
+  source_type: github
+  source_url: https://github.com/humanlayer/skills.git
 - name: skill-doctor
   source_type: github
   source_url: https://github.com/warpdotdev/common-skills.git
