@@ -1,11 +1,9 @@
 # Global instructions
 
-## User preferences
+## Language and writing
 
-- Respond in the same language the user communicates in.
-- Write in plain, natural language:
-  - Be direct, specific, and concise.
-  - Avoid AI-sounding filler, inflated claims, canned transitions, unnecessary repetition, and decorative formatting.
+- Reply in the user's language.
+- Keep replies, code comments, and docs plain, specific, and brief; cut filler, hype, repetition, and decorative formatting.
 
 ## Local files
 
