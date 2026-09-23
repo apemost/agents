@@ -262,7 +262,6 @@ def main(arguments: list[str] | None = None) -> int:
 
     failures: list[tuple[str, int]] = []
     for command in commands:
-        print(f"+ {shlex.join(command)}", flush=True)
         result = subprocess.run(command, check=False)
         if result.returncode != 0:
             label = command[3] if command[2] == "add" else "update"
