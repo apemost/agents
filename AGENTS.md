@@ -86,22 +86,7 @@ When writing or modifying code:
 
 ### Development environments
 
-- Inspect the project's local version and toolchain metadata before running language, build, test, formatting, or package-management commands. Do not assume the system binary or a globally installed tool is correct.
-- Prefer project-local environments, shims, package managers, binaries, and entry points over global tools or ad hoc invocations.
-- Avoid global package installation or mixing multiple environment workflows unless the project explicitly requires it.
-- If the project clearly uses another established workflow, follow that convention instead of overriding local setup without a concrete reason.
-
-#### Python environments
-
-- Check `pyproject.toml` and `.venv/`; if `.venv` already exists, use it instead of creating another virtual environment elsewhere.
-- In `uv` projects, use `uv run`, `uv sync`, and `uv add` instead of ad hoc `pip install` workflows.
-
-#### Go environments
-
-- Determine the required Go version from `go.work` first, then `go.mod`; use `.go-version` only as a local `goenv` pin that satisfies the workspace or module requirement.
-- Prefer `goenv` shims when they work. If they are unavailable in the current shell or blocked by the sandbox, invoke the matching binary from `~/.goenv/versions/<version>/bin/go`.
-- In sandboxed or offline runs, prefer `GOTOOLCHAIN=local`. If the selected local toolchain does not satisfy `go.work` or `go.mod`, stop and surface the mismatch.
-
-#### Node.js environments
-
-- Determine the package manager from lockfiles first, then `packageManager` in `package.json`. Do not mix `pnpm`, `yarn`, and `npm`.
+- Check project version and toolchain metadata before running language, build, test, formatting, or package commands. Follow the established local workflow and tools; avoid global installs or mixing workflows unless the project explicitly requires it.
+- Python: Check `pyproject.toml` and `.venv/`; reuse an existing `.venv/`. In `uv` projects, use `uv run`, `uv sync`, and `uv add` instead of ad hoc `pip install`.
+- Go: Take the required version from `go.work`, then `go.mod`; `.go-version` is only a compatible `goenv` pin. Prefer a working `goenv` shim; otherwise use the matching `~/.goenv/versions/<version>/bin/go`.
+- Node.js: Use the package manager specified by `packageManager` in `package.json`; if absent, infer it from a single lockfile. Do not mix `pnpm`, `yarn`, and `npm`.
