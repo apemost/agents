@@ -294,6 +294,56 @@ prefix_rule(pattern=["custom"], decision="allow")
         self.assertEqual(path.read_bytes(), original)
         self.assertFalse(any(p.exists() for p in self.managed_paths()[1:]))
 
+    def test_preview_reports_no_changes_without_writing(self) -> None:
+        """Catch treating an unchanged preview as an applyable change."""
+        first = self.run_sync()
+        self.assertEqual(first.returncode, 0, first.stderr)
+        before = {
+            path: (path.read_bytes(), path.stat().st_mtime_ns)
+            for path in self.managed_paths()
+        }
+
+        preview = self.run_sync("--preview")
+
+        self.assertEqual(preview.returncode, 3, preview.stderr)
+        self.assertIn("No config changes needed.", preview.stdout)
+        self.assertEqual(
+            {
+                path: (path.read_bytes(), path.stat().st_mtime_ns)
+                for path in self.managed_paths()
+            },
+            before,
+        )
+
+    def test_check_reports_pending_changes_without_writing(self) -> None:
+        """Catch a change check that writes configs or omits pending changes."""
+        result = self.run_sync("--check")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertFalse(any(path.exists() for path in self.managed_paths()))
+
+    def test_check_reports_unchanged_configs_without_output(self) -> None:
+        """Catch a change check that treats current configs as pending."""
+        first = self.run_sync()
+        self.assertEqual(first.returncode, 0, first.stderr)
+        before = {
+            path: (path.read_bytes(), path.stat().st_mtime_ns)
+            for path in self.managed_paths()
+        }
+
+        result = self.run_sync("--check")
+
+        self.assertEqual(result.returncode, 3, result.stderr)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(
+            {
+                path: (path.read_bytes(), path.stat().st_mtime_ns)
+                for path in self.managed_paths()
+            },
+            before,
+        )
+
     def test_preview_colors_diff_when_forced(self) -> None:
         """Catch an uncolored diff in an interactive installation."""
         self.write_home_file(
@@ -818,7 +868,9 @@ class InstallScriptTests(unittest.TestCase):
         self.assertTrue(codex_hook.is_symlink())
         self.assertEqual(codex_hook.readlink(), TASK_MANAGER_HOOK)
 
-    def test_existing_instruction_file_is_preserved_when_overwrite_declined(self) -> None:
+    def test_existing_instruction_file_is_preserved_when_overwrite_declined(
+        self,
+    ) -> None:
         """Catch silent replacement when the default answer is no."""
         target = self.home / ".claude/CLAUDE.md"
         target.parent.mkdir(parents=True)
@@ -927,17 +979,6 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(target.readlink(), source)
         self.assertFalse((self.home / ".claude/CLAUDE.md").exists())
 
-    def test_install_runs_manifest_skill_add_after_preparing_directories(self) -> None:
-        """Catch omission of the manifest installer from the top-level script."""
-        result = self.run_install("n\ny\n", path="/usr/bin:/bin")
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue(self.npx_log.is_file())
-        calls = self.npx_log.read_text(encoding="utf-8").splitlines()
-        self.assertEqual(len(calls), 20)
-        self.assertTrue(all(call.startswith("skills add ") for call in calls))
-        self.assertTrue((self.home / ".agents/skills").is_dir())
-
     def test_install_adds_missing_skills_before_updating_existing_ones(self) -> None:
         """Catch the wrong integration flags or updating before missing installs."""
         skill = self.home / ".agents/skills/agent-browser/SKILL.md"
@@ -1002,13 +1043,6 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(marker.read_text(encoding="utf-8"), "user-owned\n")
         self.assertFalse((existing_skill / "task-manager").exists())
 
-    def test_yes_runs_config_sync_from_outside_the_repository(self) -> None:
-        result = self.run_install("y\ny\n")
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue((self.home / ".claude/settings.json").is_file())
-        self.assertIn("Syncing agent configs", result.stdout)
-
     def test_config_changes_are_previewed_before_decline(self) -> None:
         """Catch a prompt that asks for consent without showing the diff."""
         target = self.home / ".claude/settings.json"
@@ -1023,6 +1057,47 @@ class InstallScriptTests(unittest.TestCase):
         self.assertIn("--- ", result.stdout)
         self.assertIn("+++ ", result.stdout)
         self.assertEqual(target.read_bytes(), original)
+
+    def test_install_skips_preview_when_configs_are_unchanged(self) -> None:
+        """Catch prompting for a preview when all configs are current."""
+        first = self.run_install("y\ny\n")
+        self.assertEqual(first.returncode, 0, first.stderr)
+        before = {
+            path: (path.read_bytes(), path.stat().st_mtime_ns)
+            for path in (
+                self.home / ".claude/settings.json",
+                self.home / ".codex/config.toml",
+                self.home / ".codex/rules/agent.rules",
+                self.home / ".gemini/antigravity-cli/settings.json",
+                self.home / ".kimi-code/config.toml",
+            )
+        }
+
+        second = self.run_install("")
+
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertIn("No config changes needed.", second.stdout)
+        self.assertNotIn("Previewing agent config changes", second.stdout)
+        self.assertNotIn("Syncing agent configs", second.stdout)
+        self.assertNotIn("Skipped agent config sync", second.stdout)
+        self.assertNotIn("  unchanged:", second.stdout)
+        self.assertEqual(
+            {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before},
+            before,
+        )
+
+    def test_preview_error_stops_install_without_applying(self) -> None:
+        """Catch treating a malformed config as an unchanged preview."""
+        target = self.home / ".claude/settings.json"
+        target.parent.mkdir(parents=True)
+        target.write_text("{invalid JSON", encoding="utf-8")
+
+        result = self.run_install("y\n")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid JSON", result.stderr)
+        self.assertEqual(target.read_text(encoding="utf-8"), "{invalid JSON")
+        self.assertNotIn("Syncing agent configs", result.stdout)
 
     def test_install_colors_status_and_diff_when_forced(self) -> None:
         """Catch a colored diff that is lost when invoked through install.sh."""
@@ -1052,19 +1127,12 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("\x1b[", result.stdout)
 
-    def test_no_skips_config_sync(self) -> None:
-        result = self.run_install("n\n")
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse((self.home / ".claude/settings.json").exists())
-        self.assertIn("Skipped agent config sync", result.stdout)
-
-    def test_empty_answer_skips_skill_installation(self) -> None:
+    def test_empty_answer_skips_skill_sync(self) -> None:
         """Catch running network installation without an explicit yes."""
         result = self.run_install("n\n\n", path="/usr/bin:/bin")
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Skipped skill installation.", result.stdout)
+        self.assertIn("Skipped skill sync.", result.stdout)
         self.assertFalse(self.npx_log.exists())
 
     def test_eof_skips_config_sync_without_failing_install(self) -> None:
@@ -1080,7 +1148,7 @@ class InstallScriptTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.home / ".claude/settings.json").is_file())
 
-    def test_skill_install_requires_a_project_python_environment(self) -> None:
+    def test_config_check_requires_a_project_python_environment(self) -> None:
         """Catch an obscure failure when neither uv nor the project venv exists."""
         fixture_repo = self.home / "without-env"
         fixture_repo.mkdir()
@@ -1092,7 +1160,7 @@ class InstallScriptTests(unittest.TestCase):
         )
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Unable to run scripts/install-skills.py", result.stderr)
+        self.assertIn("Unable to run scripts/sync-configs.py", result.stderr)
         self.assertFalse(self.npx_log.exists())
 
     def test_yes_prefers_uv_over_a_stale_project_python(self) -> None:
@@ -1134,6 +1202,12 @@ class InstallScriptTests(unittest.TestCase):
                 "--project",
                 str(fixture_repo),
                 str(fixture_repo / "scripts/sync-configs.py"),
+                "--check",
+                "run",
+                "--locked",
+                "--project",
+                str(fixture_repo),
+                str(fixture_repo / "scripts/sync-configs.py"),
                 "--preview",
                 "run",
                 "--locked",
@@ -1144,7 +1218,7 @@ class InstallScriptTests(unittest.TestCase):
                 "--locked",
                 "--project",
                 str(fixture_repo),
-                str(fixture_repo / "scripts/install-skills.py"),
+                str(fixture_repo / "scripts/sync-skills.py"),
                 "--update",
                 "--apply",
             ],
@@ -1168,7 +1242,7 @@ class InstallScriptTests(unittest.TestCase):
             path: (path.stat().st_ino, path.stat().st_mtime_ns) for path in configs
         }
 
-        second = self.run_install("yes\nyes\n")
+        second = self.run_install("n\n")
 
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertEqual(

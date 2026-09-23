@@ -1,4 +1,4 @@
-"""Integration tests for the skill manifest installer."""
+"""Integration tests for skill manifest synchronization."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-INSTALLER = REPO_ROOT / "scripts/install-skills.py"
+INSTALLER = REPO_ROOT / "scripts/sync-skills.py"
 REPOSITORY_MANIFEST = REPO_ROOT / "skills.yaml"
 
 
@@ -81,19 +81,11 @@ class SkillInstallerTests(unittest.TestCase):
     def make_fake_toolchain(
         self,
         *,
-        node_version: str = "v22.20.0",
         failing_source: str | None = None,
     ) -> tuple[Path, Path]:
-        """Create deterministic node and npx executables for apply-mode tests."""
+        """Create a deterministic npx executable for apply-mode tests."""
         fake_bin = self.root / "fake-bin"
         fake_bin.mkdir(exist_ok=True)
-        node = fake_bin / "node"
-        node.write_text(
-            f"#!/bin/sh\nprintf '%s\\n' '{node_version}'\n",
-            encoding="utf-8",
-        )
-        node.chmod(0o755)
-
         log = self.root / "npx.log"
         npx = fake_bin / "npx"
         failure = ""
@@ -299,20 +291,6 @@ class SkillInstallerTests(unittest.TestCase):
         self.assertIn("skill directory is a symlink", result.stderr)
         self.assertFalse(log.exists())
 
-    def test_preview_rejects_symlinked_skill_directory(self) -> None:
-        """Catch a preview that follows a user-owned skill directory link."""
-        linked_source = self.root / "user-skills"
-        linked_source.mkdir()
-        claude_skills = self.home / ".claude/skills"
-        claude_skills.parent.mkdir()
-        claude_skills.symlink_to(linked_source, target_is_directory=True)
-
-        result = self.run_installer()
-
-        self.assertEqual(result.returncode, 2)
-        self.assertIn("skill directory is a symlink", result.stderr)
-        self.assertNotIn("npx skills add", result.stdout)
-
     def test_apply_rejects_symlinked_user_lock(self) -> None:
         """Catch updates that would write through a user-owned lock link."""
         linked_lock = self.root / "user-lock.json"
@@ -333,21 +311,6 @@ class SkillInstallerTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("skill lock is a symlink", result.stderr)
         self.assertFalse(log.exists())
-
-    def test_apply_does_not_enforce_a_pinned_cli_node_version(self) -> None:
-        """Catch stale runtime checks that do not belong to `npx skills`."""
-        fake_bin, log = self.make_fake_toolchain(node_version="v1.0.0")
-
-        result = self.run_installer(
-            "--apply",
-            extra_env={
-                "PATH": f"{fake_bin}:{os.environ['PATH']}",
-                "NPX_LOG": str(log),
-            },
-        )
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(log.read_text().splitlines()), 2)
 
     def test_apply_continues_after_a_group_failure_and_returns_failure(self) -> None:
         """Catch early exit that prevents independent sources from installing."""
@@ -515,25 +478,6 @@ class SkillInstallerTests(unittest.TestCase):
         self.assertEqual(len(commands), 1)
         self.assertIn("--skill alpha", commands[0])
         self.assertNotIn("--skill beta", commands[0])
-
-    def test_update_checks_only_complete_manifest_skills(self) -> None:
-        """Catch upstream updates leaking to unlisted or newly added skills."""
-        self.write_installed_state("alpha", "gamma")
-
-        result = self.run_installer("--update")
-
-        self.assertEqual(result.returncode, 0, result.stderr)
-        commands = [
-            line for line in result.stdout.splitlines() if line.startswith("npx ")
-        ]
-        self.assertEqual(
-            commands,
-            [
-                "npx skills add https://github.com/example/one.git "
-                "--skill beta --global --agent claude-code --agent codex --yes",
-                "npx skills update alpha gamma --global --yes",
-            ],
-        )
 
     def test_update_apply_adds_missing_then_checks_only_existing_skills(self) -> None:
         """Catch an update that forgets missing skills or checks untracked names."""

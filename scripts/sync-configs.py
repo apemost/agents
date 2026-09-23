@@ -68,6 +68,7 @@ CONFIG_SPECS = (
     ),
     ConfigSpec(Path("kimi-code/config.toml"), Path(".kimi-code/config.toml"), "toml"),
 )
+PREVIEW_NO_CHANGES = 3
 
 
 class ConfigSyncError(RuntimeError):
@@ -468,12 +469,12 @@ def _apply_operations(operations: list[WriteOperation]) -> None:
         )
 
 
-def _preview_operations(operations: list[WriteOperation]) -> None:
+def _preview_operations(operations: list[WriteOperation]) -> bool:
     use_color = _color_enabled(sys.stdout)
     changed = [operation for operation in operations if operation.changed]
     if not changed:
         print(_colored("No config changes needed.", "2", use_color))
-        return
+        return False
 
     for operation in changed:
         action = "update" if operation.existed else "create"
@@ -502,24 +503,33 @@ def _preview_operations(operations: list[WriteOperation]) -> None:
             print(_colored(content, color, use_color) if color else content)
             if not line.endswith("\n"):
                 print("\\ No newline at end of file")
+    return True
 
 
 def main(arguments: list[str] | None = None) -> int:
     """Preview or atomically update validated user config patches."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--preview",
         action="store_true",
-        help="show the proposed config changes without writing files",
+        help="show proposed changes without writing; exit 3 when nothing changed",
+    )
+    mode.add_argument(
+        "--check",
+        action="store_true",
+        help="silently check for changes; exit 3 when nothing changed",
     )
     args = parser.parse_args(arguments if arguments is not None else [])
     repo_root = Path(__file__).resolve().parents[1]
     home = Path.home()
     try:
         operations = _prepare_operations(repo_root, home)
+        if args.check:
+            has_changes = any(operation.changed for operation in operations)
+            return 0 if has_changes else PREVIEW_NO_CHANGES
         if args.preview:
-            _preview_operations(operations)
-            return 0
+            return 0 if _preview_operations(operations) else PREVIEW_NO_CHANGES
         _apply_operations(operations)
         use_color = _color_enabled(sys.stdout)
         for operation in operations:
@@ -531,9 +541,7 @@ def main(arguments: list[str] | None = None) -> int:
             print(_colored(f"  {action}: {operation.display_path}", color, use_color))
     except ConfigSyncError as error:
         print(
-            _colored(
-                f"sync-configs: error: {error}", "31", _color_enabled(sys.stderr)
-            ),
+            _colored(f"sync-configs: error: {error}", "31", _color_enabled(sys.stderr)),
             file=sys.stderr,
         )
         return 1

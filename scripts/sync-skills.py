@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Preview or install the skills declared by this repository."""
+"""Preview or synchronize the skills declared by this repository."""
 
 from __future__ import annotations
 
@@ -231,7 +231,7 @@ def _check_skill_directories(agents: list[str]) -> None:
 
 
 def main(arguments: list[str] | None = None) -> int:
-    """Run the skill installer CLI."""
+    """Run the skill synchronization CLI."""
     args = _parse_args(arguments if arguments is not None else sys.argv[1:])
     try:
         manifest = _load_manifest(args.manifest)
@@ -240,7 +240,7 @@ def main(arguments: list[str] | None = None) -> int:
         lock = _load_lock()
         commands, current_count = _plan_commands(manifest, lock, update=args.update)
     except (KeyError, ManifestError, TypeError) as error:
-        print(f"install-skills: error: {error}", file=sys.stderr)
+        print(f"sync-skills: error: {error}", file=sys.stderr)
         return 2
 
     if not args.apply:
@@ -253,7 +253,7 @@ def main(arguments: list[str] | None = None) -> int:
         return 0
 
     if commands and shutil.which("npx") is None:
-        print("install-skills: error: cannot find npx in PATH", file=sys.stderr)
+        print("sync-skills: error: cannot find npx in PATH", file=sys.stderr)
         return 2
 
     if not commands:
@@ -270,11 +270,11 @@ def main(arguments: list[str] | None = None) -> int:
     if failures:
         for source, returncode in failures:
             print(
-                f"install-skills: source failed ({returncode}): {source}",
+                f"sync-skills: source failed ({returncode}): {source}",
                 file=sys.stderr,
             )
         print(
-            f"install-skills: {len(failures)} of {len(commands)} source groups failed",
+            f"sync-skills: {len(failures)} of {len(commands)} source groups failed",
             file=sys.stderr,
         )
         return 1

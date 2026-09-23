@@ -126,31 +126,47 @@ run_project_script() {
 }
 
 sync_agent_configs() {
-  local answer
-  if read -r -p "${COLOR_YELLOW}Preview repository config changes? [y/N] ${COLOR_RESET}" answer &&
-    [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
-    say_color "$COLOR_CYAN" "Previewing agent config changes..."
-    run_project_script "scripts/sync-configs.py" --preview
-    if read -r -p "${COLOR_YELLOW}Apply these config changes? [y/N] ${COLOR_RESET}" answer &&
+  local answer check_status preview_status
+  if run_project_script "scripts/sync-configs.py" --check; then
+    if read -r -p "${COLOR_YELLOW}Preview repository config changes? [y/N] ${COLOR_RESET}" answer &&
       [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
-      say_color "$COLOR_CYAN" "Syncing agent configs..."
-      run_project_script "scripts/sync-configs.py"
+      say_color "$COLOR_CYAN" "Previewing agent config changes..."
+      if run_project_script "scripts/sync-configs.py" --preview; then
+        if read -r -p "${COLOR_YELLOW}Apply these config changes? [y/N] ${COLOR_RESET}" answer &&
+          [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
+          say_color "$COLOR_CYAN" "Syncing agent configs..."
+          run_project_script "scripts/sync-configs.py"
+        else
+          say_color "$COLOR_YELLOW" "Skipped agent config sync."
+        fi
+      else
+        preview_status=$?
+        # The preview returns 3 when all managed configs are unchanged.
+        if [[ "$preview_status" -ne 3 ]]; then
+          return "$preview_status"
+        fi
+      fi
     else
       say_color "$COLOR_YELLOW" "Skipped agent config sync."
     fi
   else
-    say_color "$COLOR_YELLOW" "Skipped agent config sync."
+    check_status=$?
+    if [[ "$check_status" -eq 3 ]]; then
+      say_color "$COLOR_DIM" "No config changes needed."
+    else
+      return "$check_status"
+    fi
   fi
 }
 
-install_skills() {
+sync_skills() {
   local answer
-  if read -r -p "${COLOR_YELLOW}Install missing skills and update installed skills? [y/N] ${COLOR_RESET}" answer &&
+  if read -r -p "${COLOR_YELLOW}Sync skills? [y/N] ${COLOR_RESET}" answer &&
     [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
-    say_color "$COLOR_CYAN" "Installing missing skills and updating installed skills..."
-    run_project_script "scripts/install-skills.py" --update --apply
+    say_color "$COLOR_CYAN" "Syncing skills..."
+    run_project_script "scripts/sync-skills.py" --update --apply
   else
-    say_color "$COLOR_YELLOW" "Skipped skill installation."
+    say_color "$COLOR_YELLOW" "Skipped skill sync."
   fi
 }
 
@@ -163,7 +179,7 @@ main() {
   echo ""
   sync_agent_configs
   echo ""
-  install_skills
+  sync_skills
 }
 
 main "$@"
