@@ -13,15 +13,15 @@ Standard `.local/` layout:
 
 ```txt
 .local/
-├── docs/               # Local working documents (design notes, research, summaries)
-│   ├── YYYY-MM-DD/     # Dated documents, e.g. descriptive-name.md
-│   └── adr/            # Local ADRs, e.g. 0001-descriptive-name.md
-├── tasks/              # Task records and ongoing work logs
-│   └── YYYY-MM-DD/     # Task contracts, e.g. task-N.md
-├── scripts/            # Project-local helper scripts and scratch automation
-├── tests/              # Temporary test scripts and one-off validation snippets
-├── references/         # Supporting inputs (snippets, schemas)
-└── tmp/                # Disposable outputs, experiments, caches; safe to delete
+├── docs/            # Local working documents (design notes, research, summaries)
+│   ├── YYYY-MM-DD/  # Dated documents, e.g. descriptive-name.md
+│   └── adr/         # Local ADRs, e.g. 0001-descriptive-name.md
+├── tasks/           # Task records and ongoing work logs
+│   └── YYYY-MM-DD/  # Task contracts, e.g. task-N.md
+├── scripts/         # Project-local helper scripts and scratch automation
+├── tests/           # Temporary test scripts and one-off validation snippets
+├── references/      # Supporting inputs (snippets, schemas)
+└── tmp/             # Disposable outputs, experiments, caches; safe to delete
 ```
 
 - Treat everything under `.local/` as project-local working state. It must remain Git ignored and must not be required by other contributors, clean checkouts, builds, tests, or releases.
@@ -70,6 +70,13 @@ For analysis and similar work, including summaries, research, discussions, explo
 - Extract shared code only when it represents the same rule and should change together. Similar-looking code or a single implementation does not need an abstraction.
 - Keep modules focused and public interfaces small. Interchangeable implementations must honor the same contract. Add extension points only when the code has a real variation to support.
 
+### Testing
+
+- Use test-driven development for code changes: write a failing test first, make it pass, then refactor.
+- When removing code or a feature, any new unit test written only to confirm the removal is temporary: delete it after it passes.
+- Place temporary test scripts under `.local/tests/`.
+- Keep formal test files, reusable fixtures, and committed validation code in the project's established test locations.
+
 ### Code comments
 
 When writing or modifying code:
@@ -100,8 +107,3 @@ When writing or modifying code:
 #### Node.js environments
 
 - Determine the package manager from lockfiles first, then `packageManager` in `package.json`. Do not mix `pnpm`, `yarn`, and `npm`.
-
-### Temporary test scripts
-
-- By default, place temporary test scripts under `.local/tests/`.
-- Keep formal test files, reusable fixtures, and committed validation code in the project's established test locations.
