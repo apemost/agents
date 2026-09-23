@@ -99,7 +99,7 @@ prepare_skill_paths() {
 }
 
 link_hooks() {
-  local source="${SCRIPT_DIR}/scripts/hooks/session-start-task-manager.py"
+  local source="${SCRIPT_DIR}/hooks/session-start-task-manager.py"
   local targets=(
     ~/.claude/hooks/session-start-task-manager.py
     ~/.codex/hooks/session-start-task-manager.py

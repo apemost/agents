@@ -20,7 +20,7 @@ from unittest.mock import patch
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SYNC_SCRIPT = REPO_ROOT / "scripts" / "sync-configs.py"
 INSTALL_SCRIPT = REPO_ROOT / "install.sh"
-TASK_MANAGER_HOOK = REPO_ROOT / "scripts/hooks/session-start-task-manager.py"
+TASK_MANAGER_HOOK = REPO_ROOT / "hooks/session-start-task-manager.py"
 SKILL_TARGET_DIRS = (
     Path(".agents/skills"),
     Path(".claude/skills"),
