@@ -23,6 +23,51 @@ pattern = "Bash(docker volume ls*)"
 [[permission.rules]]
 decision = "allow"
 scope = "user"
+pattern = "Bash(gh discussion list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh discussion view*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh issue list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh issue view*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh pr list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh pr view*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh run list*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh run view*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
+pattern = "Bash(gh search*)"
+
+[[permission.rules]]
+decision = "allow"
+scope = "user"
 pattern = "Bash(helm dep list*)"
 
 [[permission.rules]]

@@ -125,27 +125,26 @@ run_project_script() {
   fi
 }
 
+# Offer preview and apply independently when managed configs have changes.
 sync_agent_configs() {
   local answer check_status preview_status
   if run_project_script "scripts/sync-configs.py" --check; then
-    if read -r -p "${COLOR_YELLOW}Preview repository config changes? [y/N] ${COLOR_RESET}" answer &&
-      [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
+    if read -r -p "${COLOR_YELLOW}Preview repository config changes? [Y/n] ${COLOR_RESET}" answer &&
+      [[ -z "${answer}" || "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
       say_color "$COLOR_CYAN" "Previewing agent config changes..."
-      if run_project_script "scripts/sync-configs.py" --preview; then
-        if read -r -p "${COLOR_YELLOW}Apply these config changes? [y/N] ${COLOR_RESET}" answer &&
-          [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
-          say_color "$COLOR_CYAN" "Syncing agent configs..."
-          run_project_script "scripts/sync-configs.py"
-        else
-          say_color "$COLOR_YELLOW" "Skipped agent config sync."
-        fi
-      else
+      run_project_script "scripts/sync-configs.py" --preview || {
         preview_status=$?
         # The preview returns 3 when all managed configs are unchanged.
-        if [[ "$preview_status" -ne 3 ]]; then
-          return "$preview_status"
+        if [[ "$preview_status" -eq 3 ]]; then
+          return 0
         fi
-      fi
+        return "$preview_status"
+      }
+    fi
+    if read -r -p "${COLOR_YELLOW}Apply these config changes? [y/N] ${COLOR_RESET}" answer &&
+      [[ "${answer}" =~ ^([yY]|[yY][eE][sS])$ ]]; then
+      say_color "$COLOR_CYAN" "Syncing agent configs..."
+      run_project_script "scripts/sync-configs.py"
     else
       say_color "$COLOR_YELLOW" "Skipped agent config sync."
     fi

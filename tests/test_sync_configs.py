@@ -1008,7 +1008,7 @@ class InstallScriptTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-        result = self.run_install("n\ny\n", path="/usr/bin:/bin")
+        result = self.run_install("n\nn\ny\n", path="/usr/bin:/bin")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(self.npx_log.is_file())
@@ -1021,7 +1021,7 @@ class InstallScriptTests(unittest.TestCase):
     def test_install_propagates_skill_failure(self) -> None:
         """Catch a top-level success result after source installation fails."""
         result = self.run_install(
-            "n\ny\n",
+            "n\nn\ny\n",
             path="/usr/bin:/bin",
             extra_env={"FAKE_NPX_EXIT": "9"},
         )
@@ -1037,29 +1037,73 @@ class InstallScriptTests(unittest.TestCase):
         marker = existing_skill / "owner.txt"
         marker.write_text("user-owned\n", encoding="utf-8")
 
-        result = self.run_install("n\ny\n")
+        result = self.run_install("n\nn\ny\n")
 
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(marker.read_text(encoding="utf-8"), "user-owned\n")
         self.assertFalse((existing_skill / "task-manager").exists())
 
     def test_config_changes_are_previewed_before_decline(self) -> None:
-        """Catch a prompt that asks for consent without showing the diff."""
+        """Catch an explicit or default preview that omits the diff or writes configs."""
         target = self.home / ".claude/settings.json"
         target.parent.mkdir(parents=True)
         target.write_text('{"permissions":{"allow":["Bash(custom:*)"]}}\n')
         original = target.read_bytes()
 
-        result = self.run_install("y\nn\nn\n")
+        for answer in ("y\nn\nn\n", "\n\nn\n"):
+            with self.subTest(answer=answer):
+                result = self.run_install(answer)
 
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("Bash(custom:*)", result.stdout)
-        self.assertIn("--- ", result.stdout)
-        self.assertIn("+++ ", result.stdout)
-        self.assertEqual(target.read_bytes(), original)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("Bash(custom:*)", result.stdout)
+                self.assertIn("--- ", result.stdout)
+                self.assertIn("+++ ", result.stdout)
+                self.assertEqual(target.read_bytes(), original)
+                self.assertFalse((self.home / ".codex/config.toml").exists())
 
-    def test_install_skips_preview_when_configs_are_unchanged(self) -> None:
-        """Catch prompting for a preview when all configs are current."""
+    def test_skipping_preview_still_allows_config_apply(self) -> None:
+        """Catch treating a declined preview as declining apply."""
+        target = self.home / ".claude/settings.json"
+        target.parent.mkdir(parents=True)
+        for preview, apply in (("n", "y"), ("No", "yes")):
+            with self.subTest(preview=preview, apply=apply):
+                target.write_text(
+                    '{"custom":true,"permissions":{"allow":["Bash(custom:*)"]}}\n',
+                    encoding="utf-8",
+                )
+
+                result = self.run_install(f"{preview}\n{apply}\nn\n")
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                config = json.loads(target.read_text(encoding="utf-8"))
+                self.assertIn("hooks", config)
+                self.assertTrue(config["custom"])
+                self.assertNotIn("Bash(custom:*)", config["permissions"]["allow"])
+                self.assertNotIn("Previewing agent config changes", result.stdout)
+                self.assertNotIn("--- ", result.stdout)
+                self.assertNotIn("+++ ", result.stdout)
+                self.assertFalse(self.npx_log.exists())
+
+    def test_skipping_preview_requires_explicit_config_apply_consent(self) -> None:
+        """Catch applying configs on decline, a blank answer, or EOF."""
+        target = self.home / ".claude/settings.json"
+        target.parent.mkdir(parents=True)
+        target.write_text('{"custom":true}\n', encoding="utf-8")
+        original = target.read_bytes()
+
+        for answer in ("n\nn\nn\n", "n\n\nn\n", "n\n"):
+            with self.subTest(answer=answer):
+                result = self.run_install(answer)
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(target.read_bytes(), original)
+                self.assertFalse((self.home / ".codex/config.toml").exists())
+                self.assertIn("Skipped agent config sync", result.stdout)
+                self.assertNotIn("Previewing agent config changes", result.stdout)
+                self.assertFalse(self.npx_log.exists())
+
+    def test_install_skips_preview_and_apply_when_configs_are_unchanged(self) -> None:
+        """Catch config prompts consuming the skill answer when nothing changed."""
         first = self.run_install("y\ny\n")
         self.assertEqual(first.returncode, 0, first.stderr)
         before = {
@@ -1073,7 +1117,7 @@ class InstallScriptTests(unittest.TestCase):
             )
         }
 
-        second = self.run_install("")
+        second = self.run_install("y\n", path="/usr/bin:/bin")
 
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertIn("No config changes needed.", second.stdout)
@@ -1081,6 +1125,8 @@ class InstallScriptTests(unittest.TestCase):
         self.assertNotIn("Syncing agent configs", second.stdout)
         self.assertNotIn("Skipped agent config sync", second.stdout)
         self.assertNotIn("  unchanged:", second.stdout)
+        self.assertIn("Syncing skills", second.stdout)
+        self.assertTrue(self.npx_log.is_file())
         self.assertEqual(
             {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before},
             before,
@@ -1129,7 +1175,7 @@ class InstallScriptTests(unittest.TestCase):
 
     def test_empty_answer_skips_skill_sync(self) -> None:
         """Catch running network installation without an explicit yes."""
-        result = self.run_install("n\n\n", path="/usr/bin:/bin")
+        result = self.run_install("n\nn\n\n", path="/usr/bin:/bin")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Skipped skill sync.", result.stdout)
