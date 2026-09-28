@@ -4,6 +4,7 @@
     "pr": ""
   },
   "autoMemoryEnabled": false,
+  "disableRemoteControl": true,
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
