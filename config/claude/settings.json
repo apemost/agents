@@ -1,9 +1,9 @@
 {
-  "autoMemoryEnabled": false,
   "attribution": {
     "commit": "",
     "pr": ""
   },
+  "autoMemoryEnabled": false,
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
@@ -224,5 +224,6 @@
       "uv sync *"
     ]
   },
+  "remoteControlAtStartup": false,
   "skipAutoPermissionPrompt": true
 }
