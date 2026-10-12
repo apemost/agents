@@ -5,6 +5,7 @@
   },
   "autoMemoryEnabled": false,
   "disableRemoteControl": true,
+  "enableArtifact": false,
   "enabledPlugins": {
     "clangd-lsp@claude-plugins-official": true,
     "gopls-lsp@claude-plugins-official": true,
