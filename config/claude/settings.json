@@ -4,6 +4,7 @@
     "pr": ""
   },
   "autoMemoryEnabled": false,
+  "disableClaudeAiConnectors": true,
   "disableRemoteControl": true,
   "enableArtifact": false,
   "enabledPlugins": {
