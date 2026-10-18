@@ -23,11 +23,12 @@ from tomlkit.exceptions import ParseError
 
 @dataclass(frozen=True)
 class ConfigSpec:
-    """Describe one repository patch and its destination below the user home."""
+    """Describe a patch and its home-relative or XDG-config-relative target."""
 
     source: Path
     target: Path
     kind: str
+    xdg_config: bool = False
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,12 @@ CONFIG_SPECS = (
         "json",
     ),
     ConfigSpec(Path("kimi-code/config.toml"), Path(".kimi-code/config.toml"), "toml"),
+    ConfigSpec(
+        Path("opencode/opencode.json"),
+        Path("opencode/opencode.json"),
+        "json",
+        xdg_config=True,
+    ),
 )
 PREVIEW_NO_CHANGES = 3
 
@@ -224,7 +231,10 @@ def _prepare_operations(repo_root: Path, home: Path) -> list[WriteOperation]:
                 f"cannot read config patch {source}: {error}"
             ) from error
 
-        display_path = home / spec.target
+        target_root = home
+        if spec.xdg_config:
+            target_root = Path(os.environ.get("XDG_CONFIG_HOME") or home / ".config")
+        display_path = target_root / spec.target
         write_path, existed = _resolve_write_path(display_path)
         try:
             target_text = write_path.read_text(encoding="utf-8") if existed else None

@@ -5,6 +5,7 @@ agents:
 - codex
 - antigravity-cli
 - kimi-code-cli
+- opencode
 skills:
 - name: agent-browser
   source_type: github

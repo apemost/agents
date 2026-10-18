@@ -24,6 +24,7 @@ GLOBAL_SKILL_DIRS = {
     "codex": Path(".agents/skills"),
     "antigravity-cli": Path(".agents/skills"),
     "kimi-code-cli": Path(".agents/skills"),
+    "opencode": Path(".agents/skills"),
 }
 
 

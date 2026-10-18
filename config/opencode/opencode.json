@@ -1,0 +1,772 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "update": "disable",
+  "share": "disabled",
+  "permissions": [
+    {
+      "action": "shell",
+      "resource": "*",
+      "effect": "ask"
+    },
+    {
+      "action": "shell",
+      "resource": "docker build *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker buildx *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker compose *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker exec *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker image inspect *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker image ls *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker info *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker inspect *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker logs *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker ps *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker pull *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker restart *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker start *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker stats *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker stop *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker volume inspect *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker volume ls *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh discussion list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh discussion view *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh issue list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh issue view *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh pr list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh pr view *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh run list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh run view *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "gh search *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git add *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git commit *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git diff *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "git status *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "go build *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "go get *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "go mod *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "go test *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "go vet *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "head *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dep list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dependencies list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dependency list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm env *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm get *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm history *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm lint *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm ls *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm plugin list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm repo list *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm search *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm show *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm status *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm template *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm verify *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "helm version *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "jq *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl api-resources *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl api-versions *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl cluster-info *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl describe *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl explain *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl get *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl logs *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl top *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl version *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "make *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "npx ctx7@latest *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "npx tsc *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli click *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli close *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli console *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli eval *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli goto *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli network *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli open *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli run-code *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli screenshot *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "playwright-cli snapshot *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm add *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm build *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm exec *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm install *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm lint *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm run *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm tsc *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "pnpm vitest *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "ps *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "python3 -m json.tool *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "sentry event view *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "sleep *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "tail *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "uv add *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "uv lock *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "uv run *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "uv sync *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "which *",
+      "effect": "allow"
+    },
+    {
+      "action": "shell",
+      "resource": "docker image push *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "docker push *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "docker pussh *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "docker volume rm *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "git push *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm create *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm del *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm delete *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dep build *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dep update *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dependencies build *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dependencies update *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dependency build *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm dependency update *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm fetch *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm install *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm package *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm plugin install *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm plugin uninstall *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm plugin update *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm pull *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm push *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm registry *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm repo add *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm repo index *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm repo remove *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm repo update *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm rollback *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm test *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm uninstall *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "helm upgrade *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl apply *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl attach *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl auth *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl autoscale *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl cordon *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl cp *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl create *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl delete *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl drain *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl edit *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl exec *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl expose *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl label *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl patch *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl port-forward *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl proxy *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl replace *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl rollout *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl run *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl scale *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl set *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl taint *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "kubectl uncordon *",
+      "effect": "deny"
+    },
+    {
+      "action": "shell",
+      "resource": "ssh *",
+      "effect": "deny"
+    },
+    {
+      "action": "read",
+      "resource": "~/.ssh/*",
+      "effect": "deny"
+    },
+    {
+      "action": "external_directory",
+      "resource": "*",
+      "effect": "ask"
+    },
+    {
+      "action": "external_directory",
+      "resource": "~/.agents/skills/*",
+      "effect": "allow"
+    }
+  ]
+}

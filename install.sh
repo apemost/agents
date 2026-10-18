@@ -76,6 +76,7 @@ link_agents_md() {
     ~/.codex/AGENTS.md
     ~/.gemini/GEMINI.md
     ~/.kimi-code/AGENTS.md
+    "${XDG_CONFIG_HOME:-$HOME/.config}/opencode/AGENTS.md"
   )
   say_color "$COLOR_CYAN" "Installing AGENTS.md → agent config symlinks..."
   for target in "${targets[@]}"; do

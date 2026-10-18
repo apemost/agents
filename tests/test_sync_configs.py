@@ -53,6 +53,7 @@ class SyncConfigsTests(unittest.TestCase):
         env = os.environ.copy()
         env.pop("NO_COLOR", None)
         env.pop("CLICOLOR_FORCE", None)
+        env.pop("XDG_CONFIG_HOME", None)
         env["HOME"] = str(self.home)
         if extra_env:
             env.update(extra_env)
@@ -105,7 +106,63 @@ class SyncConfigsTests(unittest.TestCase):
             self.home / ".codex/rules/agent.rules",
             self.home / ".gemini/antigravity-cli/settings.json",
             self.home / ".kimi-code/config.toml",
+            self.home / ".config/opencode/opencode.json",
         ]
+
+    def test_opencode_preview_and_merge_preserve_provider_and_own_permissions(self) -> None:
+        """Catch omitted OpenCode patches and unsafe permission-list merging."""
+        original = {
+            "model": "example/custom-model",
+            "providers": {"example": {"options": {"baseURL": "http://localhost:1234"}}},
+            "update": "auto",
+            "permissions": [
+                {"action": "shell", "resource": "*", "effect": "allow"},
+            ],
+        }
+        target = self.write_home_file(".config/opencode/opencode.json", json.dumps(original))
+        preview = self.run_sync("--preview")
+        self.assertEqual(preview.returncode, 0, preview.stderr)
+        self.assertIn(str(target), preview.stdout)
+        self.assertEqual(json.loads(target.read_text()), original)
+
+        applied = self.run_sync()
+        self.assertEqual(applied.returncode, 0, applied.stderr)
+        result = json.loads(target.read_text())
+        self.assertEqual(result["model"], original["model"])
+        self.assertEqual(result["providers"], original["providers"])
+        self.assertEqual(result["update"], "disable")
+        self.assertEqual(
+            result["permissions"][0],
+            {"action": "shell", "resource": "*", "effect": "ask"},
+        )
+        self.assertIn(
+            {"action": "shell", "resource": "git push *", "effect": "deny"},
+            result["permissions"],
+        )
+        self.assertNotIn(original["permissions"][0], result["permissions"])
+
+    def test_opencode_uses_xdg_config_home(self) -> None:
+        """Catch writing OpenCode settings to a directory the client ignores."""
+        config_home = self.home / "custom-config"
+        result = self.run_sync(extra_env={"XDG_CONFIG_HOME": str(config_home)})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((config_home / "opencode/opencode.json").is_file())
+        self.assertFalse((self.home / ".config/opencode/opencode.json").exists())
+
+    def test_opencode_repairs_permission_order_even_when_values_match(self) -> None:
+        """Catch treating reordered last-match-wins rules as unchanged."""
+        config = json.loads((REPO_ROOT / "config/opencode/opencode.json").read_text())
+        config["permissions"].reverse()
+        target = self.write_home_file(".config/opencode/opencode.json", json.dumps(config))
+        result = self.run_sync()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        actual = json.loads(target.read_text())["permissions"]
+        self.assertEqual(
+            actual[0], {"action": "shell", "resource": "*", "effect": "ask"}
+        )
+        self.assertIn(
+            {"action": "shell", "resource": "git push *", "effect": "deny"}, actual
+        )
 
     def seed_custom_configs(self) -> None:
         """Create fixtures with unmanaged keys and stale managed list items."""
@@ -831,6 +888,7 @@ class InstallScriptTests(unittest.TestCase):
         env = os.environ.copy()
         env.pop("NO_COLOR", None)
         env.pop("CLICOLOR_FORCE", None)
+        env.pop("XDG_CONFIG_HOME", None)
         env["HOME"] = str(self.home)
         env["PATH"] = f"{self.fake_bin}:{path or os.environ['PATH']}"
         env["NPX_LOG"] = str(self.npx_log)
@@ -853,9 +911,22 @@ class InstallScriptTests(unittest.TestCase):
             self.home / ".codex/AGENTS.md",
             self.home / ".gemini/GEMINI.md",
             self.home / ".kimi-code/AGENTS.md",
+            self.home / ".config/opencode/AGENTS.md",
             self.home / ".claude/hooks/session-start-task-manager.py",
             self.home / ".codex/hooks/session-start-task-manager.py",
         ]
+
+    def test_installs_opencode_instructions_at_default_and_xdg_paths(self) -> None:
+        """Catch missing global instructions or disagreement with config paths."""
+        for config_home in (self.home / ".config", self.home / "custom-config"):
+            with self.subTest(config_home=config_home):
+                result = self.run_install(
+                    "n\nn\nn\n", extra_env={"XDG_CONFIG_HOME": str(config_home)}
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                target = config_home / "opencode/AGENTS.md"
+                self.assertTrue(target.is_symlink())
+                self.assertEqual(target.resolve(), REPO_ROOT / "AGENTS.md")
 
     def test_installs_client_specific_task_manager_hook_links(self) -> None:
         result = self.run_install("n\n")
@@ -949,6 +1020,7 @@ class InstallScriptTests(unittest.TestCase):
         private_paths = (
             self.home / ".codex/skills",
             self.home / ".gemini/antigravity-cli/skills",
+            self.home / ".config/opencode/skills",
         )
         for target in private_paths:
             source = self.home / f"external-{target.parent.name}-skills"
@@ -1114,6 +1186,7 @@ class InstallScriptTests(unittest.TestCase):
                 self.home / ".codex/rules/agent.rules",
                 self.home / ".gemini/antigravity-cli/settings.json",
                 self.home / ".kimi-code/config.toml",
+                self.home / ".config/opencode/opencode.json",
             )
         }
 
@@ -1280,6 +1353,7 @@ class InstallScriptTests(unittest.TestCase):
             self.home / ".codex/rules/agent.rules",
             self.home / ".gemini/antigravity-cli/settings.json",
             self.home / ".kimi-code/config.toml",
+            self.home / ".config/opencode/opencode.json",
         ]
         first_link_metadata = {
             path: (path.lstat().st_ino, path.lstat().st_mtime_ns) for path in links

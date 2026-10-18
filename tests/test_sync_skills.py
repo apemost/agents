@@ -421,7 +421,7 @@ class SkillInstallerTests(unittest.TestCase):
         """Catch reinstalling skills when universal agents lack private links."""
         self.manifest.write_text(
             self.manifest.read_text(encoding="utf-8").replace(
-                "- codex\n", "- codex\n- antigravity-cli\n- kimi-code-cli\n"
+                "- codex\n", "- codex\n- antigravity-cli\n- kimi-code-cli\n- opencode\n"
             ),
             encoding="utf-8",
         )
