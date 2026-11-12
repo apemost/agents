@@ -28,7 +28,7 @@ Standard `.local/` layout:
 
 ## Task management
 
-Use persistent task files for substantive work. Before writing implementation code, the agent must establish a task file that defines scope, acceptance criteria, evidence, and what "done" means. This file is the single source of truth across sessions, compaction, and handoffs.
+Use persistent task files for substantive work. Before writing implementation code, the agent must establish a task file that defines scope, acceptance criteria, and evidence. This file is the single source of truth across sessions, compaction, and handoffs.
 
 - Use `task-manager` before every task, including simple edits. Simple Q&A and git commit requests are the exceptions. For requests that invoke the skill, follow its tracking decision.
 - Store task files under `.local/tasks/YYYY-MM-DD/task-N.md` unless the project specifies otherwise.
@@ -40,7 +40,7 @@ Use persistent task files for substantive work. Before writing implementation co
 
 ### Generated documents
 
-For analysis and similar work, including summaries, research, discussions, explorations, comparisons, and recommendations, save the substantive result as a document artifact unless the user asks for inline content. This applies to standalone documents, long-form artifacts, substantial conclusions, reusable analyses, decision records, and detailed discussion summaries:
+For analysis and similar work, including summaries, research, discussions, explorations, comparisons, and recommendations, save the substantive result as a document artifact unless the user asks for inline content:
 
 - Save it as Markdown instead of printing the full content directly in chat.
 - Default path: `.local/docs/YYYY-MM-DD/descriptive-name.md`, unless the user or project specifies another location. Create the directory if needed.
@@ -80,7 +80,7 @@ For analysis and similar work, including summaries, research, discussions, explo
 When writing or modifying code:
 
 - Write new comments and annotations in English. This includes inline comments, block comments, JSDoc / docstrings, and TODO / FIXME markers.
-- Do not rewrite an existing comment only to translate it into English. If a non-English comment remains accurate and does not need to change, leave it as-is.
+- Do not rewrite an existing comment only to translate it into English.
 - When modifying code, review nearby comments and update any that no longer describe the behavior accurately. Treat stale or misleading comments as bugs.
 - If a public function, class, or module is missing a descriptive comment, add one as part of the change.
 
