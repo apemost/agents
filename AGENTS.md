@@ -22,7 +22,7 @@ Standard `.local/` layout:
 └── tmp/             # Disposable outputs, experiments, caches; safe to delete
 ```
 
-- Treat everything under `.local/` as project-local working state. It must remain Git ignored and must not be required by other contributors, clean checkouts, builds, tests, or releases.
+- Treat everything under `.local/` as project-local working state. It must remain Git ignored and must not be required for clean checkouts, builds, tests, or releases.
 - Do not link to or cite `.local/` files from tracked source files or formal project documentation, including READMEs, ADRs, design documents, and changelogs.
 - Exclude `.local/` from general project layout trees and architecture overviews.
 
