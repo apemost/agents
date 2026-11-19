@@ -56,7 +56,7 @@ For analysis and similar work, including summaries, research, discussions, explo
 - After `task-manager` establishes or refreshes the task state, decide whether subagents would materially improve the work. Load `use-subagents` when delegation is a realistic option or existing worker output needs review. If the work stays local after serious consideration, state the reason.
 - When delegating tracked work, pass its exact task path and the context needed for the assignment. Require workers to read the relevant sections, or the complete parent task when scope, constraints, acceptance criteria, ownership, or prior decisions may affect their work. The Coordinator owns the parent task and workers receive read-only access. Create any durable child task before handoff.
 - The main agent owns cross-subtask context, integration, review, and final verification. Accept or reject each worker result independently before recording it as authoritative task state.
-- When spawning subagents, use the same model and reasoning effort as the main agent unless the user, the task, or repo-specific instructions explicitly say otherwise. If a subagent must use different settings, make that override explicit.
+- Use the subagent's configured or inherited model and reasoning effort unless the subtask benefits from an explicit override. Quick, verifiable lookups or browsing can use lighter settings. A difficult, independent investigation may need a stronger model or deeper reasoning.
 
 ## Coding standards
 
