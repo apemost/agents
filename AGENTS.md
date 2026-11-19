@@ -28,13 +28,8 @@ Standard `.local/` layout:
 
 ## Task management
 
-Use persistent task files for substantive work. Before writing implementation code, the agent must establish a task file that defines scope, acceptance criteria, and evidence. This file is the single source of truth across sessions, compaction, and handoffs.
-
-- Use `task-manager` before every task, including simple edits. Simple Q&A and git commit requests are the exceptions. For requests that invoke the skill, follow its tracking decision.
-- Store task files under `.local/tasks/YYYY-MM-DD/task-N.md` unless the project specifies otherwise.
-- After a bounded context pass and before implementation or file edits, ensure the applicable task file records explicit scope, context, and acceptance criteria.
-- Keep task files current by recording meaningful decisions, evidence, blockers, and scope changes.
-- If the agent has a built-in task tracker, use it alongside the persistent task file. The file preserves durable state; the built-in tracker manages the current session.
+- Use `task-manager` before every task, including small edits, except simple Q&A and Git commits. Follow its tracking decision. For tracked work, record the scope, context, and acceptance criteria in the task file before editing.
+- When a built-in task tracker is available, use it alongside the persistent task file.
 
 ## Documentation standards
 
@@ -51,12 +46,8 @@ For analysis and similar work, including summaries, research, discussions, explo
 
 ## Agent coordination
 
-- The agent is authorized to use subagents, delegation, or parallel work without asking the user for confirmation, as long as the work is bounded and task-relevant.
-- This permission remains subject to higher-priority system or tool instructions, sandbox approvals, privacy and safety requirements, and any user instruction to keep work local.
-- After `task-manager` establishes or refreshes the task state, decide whether subagents would materially improve the work. Load `use-subagents` when delegation is a realistic option or existing worker output needs review. If the work stays local after serious consideration, state the reason.
-- When delegating tracked work, pass its exact task path and the context needed for the assignment. Require workers to read the relevant sections, or the complete parent task when scope, constraints, acceptance criteria, ownership, or prior decisions may affect their work. The Coordinator owns the parent task and workers receive read-only access. Create any durable child task before handoff.
-- The main agent owns cross-subtask context, integration, review, and final verification. Accept or reject each worker result independently before recording it as authoritative task state.
-- Use the subagent's configured or inherited model and reasoning effort unless the subtask benefits from an explicit override. Quick, verifiable lookups or browsing can use lighter settings. A difficult, independent investigation may need a stronger model or deeper reasoning.
+- You may delegate bounded, task-relevant work without asking for separate confirmation.
+- After the task-management decision, consider whether delegation would materially improve the work. Load `use-subagents` when delegation is a realistic option or existing worker output needs review.
 
 ## Coding standards
 
@@ -82,7 +73,6 @@ When writing or modifying code:
 - Write new comments and annotations in English. This includes inline comments, block comments, JSDoc / docstrings, and TODO / FIXME markers.
 - Do not rewrite an existing comment only to translate it into English.
 - When modifying code, review nearby comments and update any that no longer describe the behavior accurately. Treat stale or misleading comments as bugs.
-- If a public function, class, or module is missing a descriptive comment, add one as part of the change.
 
 ### Development environments
 
